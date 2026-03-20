@@ -1,0 +1,45 @@
+name: Build macOS App
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:   # lets you trigger a build manually from the GitHub UI
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      # 1 — Check out your code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2 — Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 3 — Install dependencies
+      - name: Install dependencies
+        run: |
+          pip install opencv-python-headless pyinstaller
+
+      # 4 — Build the .app with PyInstaller
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller --onefile --windowed --name "FrameExtractor" frame_extractor_app.py
+
+      # 5 — Zip the .app so it can be downloaded as a single file
+      - name: Zip the .app bundle
+        run: |
+          cd dist
+          zip -r FrameExtractor-macOS.zip FrameExtractor.app
+
+      # 6 — Upload it so you can download it from the GitHub UI
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FrameExtractor-macOS
+          path: dist/FrameExtractor-macOS.zip
+          retention-days: 30
